@@ -7,7 +7,7 @@ var configFilePath = "";
 var pluginDataDir = path.join(LiteLoader.path.data, "anti_recall");
 
 const imgDownloader = new ImgDownloader();
-const Level = require("level-party");
+const Level = require("level");
 var db = null;
 
 var sampleConfig = {
@@ -73,31 +73,14 @@ async function onLoad() {
   });
 
   if (nowConfig.saveDb) {
-    db = Level(path.join(pluginDataDir, "qq-recalled-db"), {
-      valueEncoding: "json",
-    });
+    const dbPath = path.join(pluginDataDir, "qq-recalled-db");
+    if (!fs.existsSync(dbPath)) {
+      fs.mkdirSync(dbPath, { recursive: true });
+    }
 
-    db.open((e) => {
+    db = level(dbPath, { valueEncoding: "json" }, (e) => {
       if (e !== undefined && e !== null) {
-        // app.whenReady().then(() => {
-        //   dialog
-        //     .showMessageBox({
-        //       type: "warning",
-        //       title: "警告",
-        //       message:
-        //         "打开反撤回数据库失败，可能是上次QQ进程未完全退出。建议关闭QQ并彻底结束QQ进程，再重启QQ，否则反撤回消息无法正常保存（即使反撤回仍生效，只是重启QQ后会丢失）。",
-        //       buttons: ["继续打开QQ", "关闭QQ"],
-        //     })
-        //     .then((r) => {
-        //       if (r.response == 1) {
-        //         app.exit();
-        //       }
-        //     });
-        // });
-        output(
-          "打开数据库失败，可能是QQ进程未完全退出。请查看下面详细错误信息中的cause部分：",
-          e
-        );
+        output("打开数据库失败，可能是QQ进程未完全退出：", e);
       }
     });
   }
